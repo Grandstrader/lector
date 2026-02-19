@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.responsivevoice.org/responsivevoice.js?key=8pY7z7rG"></script>
+</head>
+<body class="bg-transparent p-4">
+    <div class="max-w-lg mx-auto bg-white rounded-xl shadow-md p-6 border border-gray-200 space-y-4">
+        <h2 class="text-2xl font-bold text-gray-800 text-center">Lector GrandTrader</h2>
+        <textarea id="text" rows="5" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escribe aquí..."></textarea>
+        
+        <select id="voice" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
+            <option value="Spanish Female">Español Femenino (Natural)</option>
+            <option value="Spanish Male">Español Masculino (Natural)</option>
+            <option value="Spanish Latin American Female">Español Latino (Natural)</option>
+        </select>
+
+        <div class="flex space-x-2">
+            <button onclick="play()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg">Reproducir</button>
+            <button onclick="stop()" class="flex-1 bg-red-500 text-white font-bold py-2 rounded-lg">Detener</button>
+        </div>
+        
+        <button onclick="download()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow">Descargar MP3</button>
+    </div>
+
+    <script>
+        function play() {
+            const txt = document.getElementById('text').value;
+            responsiveVoice.speak(txt, document.getElementById('voice').value);
+        }
+        function stop() { responsiveVoice.cancel(); }
+        function download() {
+            const txt = document.getElementById('text').value;
+            if(!txt) return alert("Escribe algo");
+            const lang = document.getElementById('voice').value.includes("Latin") ? "es-mx" : "es-es";
+            const url = `https://api.voicerss.org/?key=8d8868f08149457691882d2c88461718&src=${encodeURIComponent(txt)}&hl=${lang}&c=mp3`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

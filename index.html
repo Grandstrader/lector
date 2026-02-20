@@ -12,19 +12,19 @@
         <textarea id="text" rows="4" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Escribe aquí..."></textarea>
         
         <div class="space-y-3">
-            <label class="text-xs font-bold text-gray-400 uppercase">Selecciona Voz:</label>
-            <select id="voiceSelect" class="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-xs"></select>
+            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Voces disponibles en tu equipo:</label>
+            <select id="voiceSelect" class="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-sm outline-none"></select>
         </div>
 
         <div class="flex space-x-2 pt-2">
-            <button onclick="speak()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md">Reproducir</button>
-            <button onclick="stop()" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl shadow-md">Detener</button>
+            <button onclick="speak()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md active:scale-95 transition-transform">Escuchar</button>
+            <button onclick="stop()" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl shadow-md active:scale-95 transition-transform">Parar</button>
         </div>
         
-        <button onclick="downloadAudio()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
-            💾 DESCARGAR MP3 (Link Directo)
+        <button onclick="downloadAudio()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all">
+            💾 DESCARGAR MP3
         </button>
-        <p id="msg" class="text-[10px] text-center text-gray-400">Si la descarga falla, usa el link que se abrirá.</p>
+        <p id="msg" class="text-[10px] text-center text-gray-400 mt-2">La descarga abrirá una nueva pestaña con tu audio listo.</p>
     </div>
 
     <script>
@@ -35,13 +35,23 @@
         function loadVoices() {
             voices = synth.getVoices();
             voiceSelect.innerHTML = '';
-            // Filtramos solo para mostrar voces en español primero
-            voices.filter(v => v.lang.includes('es')).forEach(v => {
+            // Priorizamos voces en español
+            const esVoices = voices.filter(v => v.lang.includes('es'));
+            esVoices.forEach(v => {
                 const opt = document.createElement('option');
-                opt.textContent = v.name;
+                opt.textContent = v.name + (v.name.includes('Google') ? ' (Recomendada)' : '');
                 opt.value = v.name;
                 voiceSelect.appendChild(opt);
             });
+            // Si no hay voces en español, mostramos todas
+            if (esVoices.length === 0) {
+                voices.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.textContent = v.name;
+                    opt.value = v.name;
+                    voiceSelect.appendChild(opt);
+                });
+            }
         }
 
         if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
@@ -49,8 +59,11 @@
 
         function speak() {
             synth.cancel();
-            const utter = new SpeechSynthesisUtterance(document.getElementById('text').value);
+            const txt = document.getElementById('text').value;
+            if(!txt) return;
+            const utter = new SpeechSynthesisUtterance(txt);
             utter.voice = voices.find(v => v.name === voiceSelect.value);
+            utter.rate = 0.9; // Un poco más lento para que suene menos robótica
             synth.speak(utter);
         }
 
@@ -58,16 +71,15 @@
 
         function downloadAudio() {
             const txt = document.getElementById('text').value;
-            if(!txt) return alert("Escribe un texto");
+            if(!txt) return alert("Escribe un texto primero");
             
-            // MÉTODO DE EMERGENCIA: Generamos el audio a través de un proxy que Blogger no bloquea
+            // NUEVA LLAVE DE RESPALDO (API KEY)
+            const key = "38870183e26447c29e160a221f009e51"; 
             const lang = "es-es";
-            const key = "8d8868f08149457691882d2c88461718";
-            const url = `https://api.voicerss.org/?key=${key}&src=${encodeURIComponent(txt)}&hl=${lang}&c=mp3`;
+            // Generamos la URL de descarga directa
+            const url = `https://api.voicerss.org/?key=${key}&src=${encodeURIComponent(txt)}&hl=${lang}&c=mp3&f=44khz_16bit_stereo`;
             
-            // Forzamos la apertura en una ventana nueva para que el navegador gestione la descarga
-            const win = window.open(url, '_blank');
-            if(!win) alert("Por favor permite las ventanas emergentes (pop-ups)");
+            window.open(url, '_blank');
         }
     </script>
 </body>

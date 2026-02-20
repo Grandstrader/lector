@@ -2,39 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.responsivevoice.org/responsivevoice.js?key=8pY7z7rG"></script>
+    <style>
+        body { background: transparent; }
+        input[type=range] { cursor: pointer; }
+    </style>
 </head>
-<body class="bg-transparent p-4">
-    <div class="max-w-lg mx-auto bg-white rounded-xl shadow-md p-6 border border-gray-200 space-y-4">
-        <h2 class="text-2xl font-bold text-gray-800 text-center">Lector GrandTrader</h2>
-        <textarea id="text" rows="5" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escribe aquí..."></textarea>
+<body class="p-2">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 border border-gray-100 space-y-4">
+        <h2 class="text-xl font-bold text-gray-800 text-center">Lector GrandTrader Pro</h2>
         
-        <select id="voice" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
-            <option value="Spanish Female">Español Femenino (Natural)</option>
-            <option value="Spanish Male">Español Masculino (Natural)</option>
-            <option value="Spanish Latin American Female">Español Latino (Natural)</option>
-        </select>
+        <textarea id="text" rows="4" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none resize-none text-gray-700" placeholder="Escribe tu mensaje aquí..."></textarea>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Voz Natural</label>
+                <select id="voice" class="w-full p-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm outline-none">
+                    <option value="Spanish Female">Español Femenino (Natural)</option>
+                    <option value="Spanish Male">Español Masculino (Natural)</option>
+                    <option value="Spanish Latin American Female">Español Latino (Natural)</option>
+                </select>
+            </div>
 
-        <div class="flex space-x-2">
-            <button onclick="play()" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg">Reproducir</button>
-            <button onclick="stop()" class="flex-1 bg-red-500 text-white font-bold py-2 rounded-lg">Detener</button>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Velocidad</label>
+                    <input type="range" id="rate" min="0.5" max="1.5" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tono</label>
+                    <input type="range" id="pitch" min="0.5" max="1.5" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex space-x-2 pt-2">
+            <button onclick="play()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-md">Reproducir</button>
+            <button onclick="stop()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-md">Detener</button>
         </div>
         
-        <button onclick="download()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow">Descargar MP3</button>
+        <button onclick="download()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2">
+            <span>💾</span> Descargar MP3
+        </button>
     </div>
 
     <script>
         function play() {
             const txt = document.getElementById('text').value;
-            responsiveVoice.speak(txt, document.getElementById('voice').value);
+            const v = document.getElementById('voice').value;
+            const r = document.getElementById('rate').value;
+            const p = document.getElementById('pitch').value;
+            if(txt) responsiveVoice.speak(txt, v, {rate: r, pitch: p});
         }
         function stop() { responsiveVoice.cancel(); }
         function download() {
             const txt = document.getElementById('text').value;
-            if(!txt) return alert("Escribe algo");
-            const lang = document.getElementById('voice').value.includes("Latin") ? "es-mx" : "es-es";
-            const url = `https://api.voicerss.org/?key=8d8868f08149457691882d2c88461718&src=${encodeURIComponent(txt)}&hl=${lang}&c=mp3`;
+            if(!txt) return alert("Por favor, escribe un texto");
+            const v = document.getElementById('voice').value;
+            const lang = v.includes("Latin") ? "es-mx" : "es-es";
+            const url = `https://api.voicerss.org/?key=8d8868f08149457691882d2c88461718&src=${encodeURIComponent(txt)}&hl=${lang}&c=mp3&f=44khz_16bit_stereo`;
             window.open(url, '_blank');
         }
     </script>

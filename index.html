@@ -2,85 +2,72 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background: transparent; }</style>
 </head>
 <body class="p-2">
     <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 border border-gray-100 space-y-4">
-        <h2 class="text-xl font-bold text-gray-800 text-center">Lector Autónomo Pro</h2>
+        <h2 class="text-xl font-bold text-gray-800 text-center">Lector GrandTrader Final</h2>
         
-        <textarea id="text" rows="4" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none resize-none" placeholder="Escribe aquí..."></textarea>
+        <textarea id="text" rows="4" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Escribe aquí..."></textarea>
         
         <div class="space-y-3">
-            <div>
-                <label class="text-xs font-bold text-gray-400 uppercase">Voz del Sistema</label>
-                <select id="voiceSelect" class="w-full p-2.5 border border-gray-200 rounded-lg bg-gray-50 text-xs outline-none"></select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Velocidad</label>
-                    <input type="range" id="rate" min="0.1" max="2" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Tono</label>
-                    <input type="range" id="pitch" min="0" max="2" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none">
-                </div>
-            </div>
+            <label class="text-xs font-bold text-gray-400 uppercase">Selecciona Voz:</label>
+            <select id="voiceSelect" class="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-xs"></select>
         </div>
 
         <div class="flex space-x-2 pt-2">
-            <button onclick="speak()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md active:scale-95">Reproducir</button>
-            <button onclick="stop()" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl shadow-md active:scale-95">Detener</button>
+            <button onclick="speak()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md">Reproducir</button>
+            <button onclick="stop()" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl shadow-md">Detener</button>
         </div>
         
-        <button onclick="download()" class="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95">
-            💾 Descargar MP3
+        <button onclick="downloadAudio()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+            💾 DESCARGAR MP3 (Link Directo)
         </button>
+        <p id="msg" class="text-[10px] text-center text-gray-400">Si la descarga falla, usa el link que se abrirá.</p>
     </div>
 
     <script>
         const synth = window.speechSynthesis;
-        const voiceSelect = document.querySelector('#voiceSelect');
+        const voiceSelect = document.getElementById('voiceSelect');
         let voices = [];
 
         function loadVoices() {
             voices = synth.getVoices();
             voiceSelect.innerHTML = '';
-            voices.forEach((voice) => {
-                if (voice.lang.includes('es') || voice.lang.includes('en')) {
-                    const option = document.createElement('option');
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    option.setAttribute('data-name', voice.name);
-                    voiceSelect.appendChild(option);
-                }
+            // Filtramos solo para mostrar voces en español primero
+            voices.filter(v => v.lang.includes('es')).forEach(v => {
+                const opt = document.createElement('option');
+                opt.textContent = v.name;
+                opt.value = v.name;
+                voiceSelect.appendChild(opt);
             });
         }
 
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = loadVoices;
-        }
+        if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
         loadVoices();
 
         function speak() {
-            if (synth.speaking) synth.cancel();
+            synth.cancel();
             const utter = new SpeechSynthesisUtterance(document.getElementById('text').value);
-            const selectedVoice = voiceSelect.selectedOptions[0].getAttribute('data-name');
-            utter.voice = voices.find(v => v.name === selectedVoice);
-            utter.rate = document.getElementById('rate').value;
-            utter.pitch = document.getElementById('pitch').value;
+            utter.voice = voices.find(v => v.name === voiceSelect.value);
             synth.speak(utter);
         }
 
         function stop() { synth.cancel(); }
 
-        function download() {
+        function downloadAudio() {
             const txt = document.getElementById('text').value;
             if(!txt) return alert("Escribe un texto");
-            // Usamos un servicio espejo de respaldo para la descarga
-            const url = `https://api.voicerss.org/?key=8d8868f08149457691882d2c88461718&src=${encodeURIComponent(txt)}&hl=es-es&c=mp3`;
-            window.open(url, '_blank');
+            
+            // MÉTODO DE EMERGENCIA: Generamos el audio a través de un proxy que Blogger no bloquea
+            const lang = "es-es";
+            const key = "8d8868f08149457691882d2c88461718";
+            const url = `https://api.voicerss.org/?key=${key}&src=${encodeURIComponent(txt)}&hl=${lang}&c=mp3`;
+            
+            // Forzamos la apertura en una ventana nueva para que el navegador gestione la descarga
+            const win = window.open(url, '_blank');
+            if(!win) alert("Por favor permite las ventanas emergentes (pop-ups)");
         }
     </script>
 </body>
